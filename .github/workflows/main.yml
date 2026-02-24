@@ -1,36 +1,72 @@
-name: Java Gradle Build (Windows & Linux)
+plugins {
+    java
+    application
+}
 
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+group = "net.minecraft"
+version = "rd-132211"
 
-jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+repositories {
+    mavenCentral()
+}
 
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 
-    steps:
-      - uses: actions/checkout@v4
+/* =========================
+   LWJGL NATIVES
+   ========================= */
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 8   # 👈 IMPORTANT
+val natives: Configuration by configurations.creating {
+    isTransitive = true
+}
 
-      - name: Grant execute permission (Linux)
-        if: runner.os == 'Linux'
-        run: chmod +x gradlew
+dependencies {
+    implementation("org.lwjgl.lwjgl:lwjgl:2.9.3")
+    implementation("org.lwjgl.lwjgl:lwjgl_util:2.9.3")
 
-      - name: Build (Linux)
-        if: runner.os == 'Linux'
-        run: ./gradlew build
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-windows")
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-linux")
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-osx")
+}
 
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        run: .\gradlew.bat build
+/* =========================
+   APPLICATION ENTRY POINT
+   ========================= */
+
+application {
+    mainClassName = "com.mojang.rubydung.RubyDung"
+}
+
+/* =========================
+   CONFIGURE EXISTING RUN TASK
+   ========================= */
+
+tasks.named<JavaExec>("run") {
+    dependsOn("extractNatives")
+    workingDir = file("$projectDir/run")
+    jvmArgs = listOf("-Dorg.lwjgl.librarypath=$projectDir/run/natives")
+}
+
+/* =========================
+   EXTRACT NATIVES
+   ========================= */
+
+tasks.register<Copy>("extractNatives") {
+    from(natives.map { zipTree(it) })
+    into("$projectDir/run/natives")
+}
+
+/* =========================
+   RUNNABLE JAR
+   ========================= */
+
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "com.mojang.rubydung.RubyDung"
+        )
+    }
+}
