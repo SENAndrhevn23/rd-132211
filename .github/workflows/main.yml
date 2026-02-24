@@ -38,4 +38,4 @@ jobs:
 
       - name: Build with Gradle (Windows)
         if: runner.os == 'Windows'
-        run: gradlew.bat build
+        run: .\gradlew.bat build
