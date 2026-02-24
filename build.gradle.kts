@@ -70,3 +70,15 @@ tasks.jar {
         )
     }
 }
+
+
+import org.gradle.api.tasks.bundling.Zip
+
+// Zip the LWJGL natives folder (cross-platform)
+tasks.register<Zip>("zipNatives") {
+    group = "build"
+    description = "Zips LWJGL natives"
+    from("$projectDir/run/natives")
+    archiveFileName.set("natives.zip")
+    destinationDirectory.set(file("$projectDir/run"))
+}
