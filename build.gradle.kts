@@ -41,13 +41,11 @@ application {
 }
 
 /* =========================
-   RUN TASK
+   CONFIGURE EXISTING RUN TASK
    ========================= */
 
-tasks.register<JavaExec>("run") {
+tasks.named<JavaExec>("run") {
     dependsOn("extractNatives")
-    main = "com.mojang.rubydung.RubyDung"
-    classpath = sourceSets["main"].runtimeClasspath
     workingDir = file("$projectDir/run")
     jvmArgs = listOf("-Dorg.lwjgl.librarypath=$projectDir/run/natives")
 }
@@ -62,7 +60,7 @@ tasks.register<Copy>("extractNatives") {
 }
 
 /* =========================
-   JAR (RUNNABLE)
+   RUNNABLE JAR
    ========================= */
 
 tasks.jar {
