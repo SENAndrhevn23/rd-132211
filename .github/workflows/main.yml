@@ -8,34 +8,29 @@ on:
 
 jobs:
   build:
-    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
     strategy:
-      fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-          - windows-latest
+        os: [ ubuntu-latest, windows-latest ]
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 8   # 👈 IMPORTANT
 
       - name: Grant execute permission (Linux)
         if: runner.os == 'Linux'
         run: chmod +x gradlew
 
-      - name: Build with Gradle (Linux)
+      - name: Build (Linux)
         if: runner.os == 'Linux'
         run: ./gradlew build
 
-      - name: Build with Gradle (Windows)
+      - name: Build (Windows)
         if: runner.os == 'Windows'
         run: .\gradlew.bat build
