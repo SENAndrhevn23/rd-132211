@@ -28,9 +28,8 @@ jobs:
         if: runner.os == 'Linux'
         run: chmod +x gradlew
 
-      - name: Build JAR
-        run: |
-          ./gradlew clean jar extractNatives
+      - name: Build JAR and extract natives
+        run: ./gradlew clean jar extractNatives zipNatives
         shell: bash
 
       - name: Upload JAR artifact
@@ -39,13 +38,7 @@ jobs:
           name: rd-132211-${{ runner.os }}
           path: build/libs/*.jar
 
-      - name: Zip and upload Natives
-        run: |
-          cd run
-          zip -r natives.zip natives
-        shell: bash
-
-      - name: Upload Natives artifact
+      - name: Upload Natives ZIP
         uses: actions/upload-artifact@v4
         with:
           name: natives-${{ runner.os }}
