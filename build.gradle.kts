@@ -1,5 +1,6 @@
 plugins {
-    id("java-library")
+    java
+    application
 }
 
 group = "net.minecraft"
@@ -9,28 +10,65 @@ repositories {
     mavenCentral()
 }
 
-val natives: Configuration by configurations.creating
-natives.isTransitive = true
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+/* =========================
+   LWJGL NATIVES
+   ========================= */
+
+val natives: Configuration by configurations.creating {
+    isTransitive = true
+}
 
 dependencies {
-    implementation(group = "org.lwjgl.lwjgl", name = "lwjgl", version = "2.9.3")
-    implementation(group = "org.lwjgl.lwjgl", name = "lwjgl_util", version = "2.9.3")
-    natives(group = "org.lwjgl.lwjgl", name = "lwjgl-platform", version = "2.9.3", classifier = "natives-windows")
-    natives(group = "org.lwjgl.lwjgl", name = "lwjgl-platform", version = "2.9.3", classifier = "natives-linux")
-    natives(group = "org.lwjgl.lwjgl", name = "lwjgl-platform", version = "2.9.3", classifier = "natives-osx")
+    implementation("org.lwjgl.lwjgl:lwjgl:2.9.3")
+    implementation("org.lwjgl.lwjgl:lwjgl_util:2.9.3")
+
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-windows")
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-linux")
+    natives("org.lwjgl.lwjgl:lwjgl-platform:2.9.3:natives-osx")
 }
 
+/* =========================
+   APPLICATION ENTRY POINT
+   ========================= */
 
-task("run", JavaExec::class) {
-    jvmArgs = listOf("-Dorg.lwjgl.librarypath=${project.projectDir.toPath()}\\run\\natives")
+application {
+    mainClassName = "com.mojang.rubydung.RubyDung"
+}
+
+/* =========================
+   RUN TASK
+   ========================= */
+
+tasks.register<JavaExec>("run") {
+    dependsOn("extractNatives")
     main = "com.mojang.rubydung.RubyDung"
     classpath = sourceSets["main"].runtimeClasspath
-    workingDir("${project.projectDir.toPath()}\\run")
-    dependsOn("extractNatives")
+    workingDir = file("$projectDir/run")
+    jvmArgs = listOf("-Dorg.lwjgl.librarypath=$projectDir/run/natives")
 }
 
-task("extractNatives", Copy::class) {
-    dependsOn(natives)
+/* =========================
+   EXTRACT NATIVES
+   ========================= */
+
+tasks.register<Copy>("extractNatives") {
     from(natives.map { zipTree(it) })
-    into("${project.projectDir.toPath()}\\run\\natives")
+    into("$projectDir/run/natives")
+}
+
+/* =========================
+   JAR (RUNNABLE)
+   ========================= */
+
+tasks.jar {
+    manifest {
+        attributes(
+            "Main-Class" to "com.mojang.rubydung.RubyDung"
+        )
+    }
 }
