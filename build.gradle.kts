@@ -71,11 +71,11 @@ tasks.jar {
     }
 }
 
+/* =========================
+   ZIP NATIVES (CROSS-PLATFORM)
+   ========================= */
 
-import org.gradle.api.tasks.bundling.Zip
-
-// Zip the LWJGL natives folder (cross-platform)
-tasks.register<Zip>("zipNatives") {
+tasks.register<org.gradle.api.tasks.bundling.Zip>("zipNatives") {
     group = "build"
     description = "Zips LWJGL natives"
     from("$projectDir/run/natives")
